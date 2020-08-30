@@ -1,42 +1,32 @@
-#include <iostream>
-#include <SDL.h>
+#include "pch.h"
+#include "Core/Json.h"
+#include "Objects/Scene.h"
+#include "Graphics/Texture.h"
+#include "Objects/GameObject.h"
+#include "Objects/ObjectFactory.h"
+#include "Components/PlayerComponent.h"
+
+nc::Engine engine;
+nc::Scene scene;
 
 int main(int, char**){
-	if (SDL_Init(SDL_INIT_VIDEO) != 0){
-		std::cout << "SDL_Init Error: " << SDL_GetError() << std::endl;
-		return 1;
-	}
+	engine.Startup();
 
-	SDL_Window* window = SDL_CreateWindow("GAT150", 100, 100, 800, 600, SDL_WINDOW_SHOWN);
-	if (window == nullptr) {
-		std::cout << "SDL_CreateWindow Error: " << SDL_GetError() << std::endl;
-		SDL_Quit();
-		return 1;
-	}
+	nc::ObjectFactory::Instance().Initialize();
+	nc::ObjectFactory::Instance().Register("PlayerComponent", new nc::Creator<nc::PlayerComponent, nc::Object>);
 
-	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-	if (renderer == nullptr) {
-		std::cout << "Error: " << SDL_GetError() << std::endl;
-		SDL_Quit();
-		return 1;
-	}
+	rapidjson::Document document;
+	nc::json::Load("scene.txt", document);
 
-	//create texture
-	int width = 128;
-	int height = 128;
+	scene.Create(&engine);
+	scene.Read(document);
 
-	SDL_Texture* texture1 = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, width, height);
-	
-	Uint32* pixels = new Uint32[width * height];
-	memset(pixels, 128, width * height * sizeof(Uint32));
-	SDL_UpdateTexture(texture1, NULL, pixels, width * sizeof(Uint32));
-	
-	SDL_Surface* surface = SDL_LoadBMP("sf2.bmp");
-	if (surface == nullptr) {
-		return 1;
+	for (size_t i = 0; i < 10; i++) {
+		nc::GameObject* gameObject = nc::ObjectFactory::Instance().Create<nc::GameObject>("ProtoBox");
+		gameObject->m_transform.position = nc::Vector2{ nc::random(0, 800), nc::random(0, 600) };
+		gameObject->m_transform.angle = nc::random(0, 360);
+		scene.AddGameObject(gameObject);
 	}
-	SDL_Texture* texture2 = SDL_CreateTextureFromSurface(renderer, surface);
-	
 
 	SDL_Event event;
 	bool quit = false;
@@ -48,36 +38,49 @@ int main(int, char**){
 			break;
 		}
 
-		SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-		SDL_RenderClear(renderer);
+		//update
+		engine.Update();
+		scene.Update();
+
+		quit = (engine.GetSystem<nc::InputSystem>()->GetButtonState(SDL_SCANCODE_ESCAPE) == nc::InputSystem::eButtonState::PRESSED);
 
 		//draw
-		for (size_t i = 0; i < width * height; i++) {
-			Uint8 c = rand() % 256;
-			pixels[i] = (c << 24 | c << 16 | c << 8);
-		}
-		//pixel memory = (8/8/8/8), (8/8/8/8)
-		//pixel memory = (c/c/c/0), (c/c/c/0)
-		SDL_UpdateTexture(texture1, NULL, pixels, width * sizeof(Uint32));
+		engine.GetSystem<nc::Renderer>()->BeginFrame();
 
-		SDL_Rect rect;
-		rect.x = 200;
-		rect.y = 200;
-		rect.w = width;
-		rect.h = height;
-		SDL_RenderCopy(renderer, texture1, NULL, &rect);
+		scene.Draw();
 
-		SDL_Rect rect2;
-		rect2.x = 20;
-		rect2.y = 20;
-		SDL_QueryTexture(texture2, NULL, NULL, &rect2.w, &rect2.h);
-
-		SDL_RenderCopy(renderer, texture2, NULL, &rect2);
-
-		SDL_RenderPresent(renderer);
+		engine.GetSystem<nc::Renderer>()->EndFrame();
 	}
 
-	SDL_Quit();
+	engine.Shutdown();
 
 	return 0;
 }
+
+/*std::string str;
+	nc::json::Get(document, "string", str);
+	std::cout << str << std::endl;
+
+	bool b;
+	nc::json::Get(document, "bool", b);
+	std::cout << b << std::endl;
+
+	int i1;
+	nc::json::Get(document, "integer1", i1);
+	std::cout << i1 << std::endl;
+
+	int i2;
+	nc::json::Get(document, "integer2", i2);
+	std::cout << i2 << std::endl;
+
+	float f;
+	nc::json::Get(document, "float", f);
+	std::cout << f << std::endl;
+
+	nc::Vector2 v2;
+	nc::json::Get(document, "vector2", v2);
+	std::cout << v2 << std::endl;
+
+	nc::Color color;
+	nc::json::Get(document, "color", color);
+	std::cout << color << std::endl;*/

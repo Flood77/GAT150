@@ -1,0 +1,25 @@
+#include "pch.h"
+#include "ResourceManager.h"
+
+namespace nc {
+	bool ResourceManager::Startup() {
+
+		return false;
+	}
+
+	void ResourceManager::Shutdown() {
+
+	}
+
+	void ResourceManager::Update() {
+
+	}
+	void ResourceManager::RemoveAll() {
+		for (auto resource : m_resources) {
+			resource.second->Destroy();
+			delete resource.second;
+		}
+
+		m_resources.clear();
+	}
+}
