@@ -16,6 +16,8 @@
 #include "Math/Random.h"
 #include "Math/Transform.h"
 
+#include "Objects/ObjectFactory.h"
+
 #include <SDL.h>
 #include <SDL_image.h>
 

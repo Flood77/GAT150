@@ -1,9 +1,9 @@
 #include "pch.h"
+#include "TileMap.h"
 #include "Core/Json.h"
 #include "Objects/Scene.h"
 #include "Graphics/Texture.h"
 #include "Objects/GameObject.h"
-#include "Objects/ObjectFactory.h"
 #include "Components/PlayerComponent.h"
 
 nc::Engine engine;
@@ -21,12 +21,10 @@ int main(int, char**){
 	scene.Create(&engine);
 	scene.Read(document);
 
-	for (size_t i = 0; i < 10; i++) {
-		nc::GameObject* gameObject = nc::ObjectFactory::Instance().Create<nc::GameObject>("ProtoBox");
-		gameObject->m_transform.position = nc::Vector2{ nc::random(0, 800), nc::random(0, 600) };
-		gameObject->m_transform.angle = nc::random(0, 360);
-		scene.AddGameObject(gameObject);
-	}
+	nc::TileMap tileMap;
+	nc::json::Load("tileMap.txt", document);
+	tileMap.Read(document);
+	tileMap.Create(&scene);
 
 	SDL_Event event;
 	bool quit = false;

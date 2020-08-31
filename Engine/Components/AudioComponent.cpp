@@ -14,8 +14,8 @@ namespace nc {
 
 	void AudioComponent::Read(const rapidjson::Value& value) {
 		json::Get(value, "sound", m_soundName);
-		json::Get(value, "loop", m_loop);
 		json::Get(value, "playOnAwake", m_playOnAwake);
+		json::Get(value, "loop", m_loop);
 
 		if (m_playOnAwake) {
 			Play();

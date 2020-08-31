@@ -9,5 +9,7 @@ namespace nc {
 		virtual Object* Clone() override { return new PlayerComponent{ *this }; }
 
 		virtual void Update() override;
+
+		void CollisionEvent(GameObject* gameObject);
 	};
 }
